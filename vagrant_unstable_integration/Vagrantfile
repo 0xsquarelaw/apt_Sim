@@ -1,0 +1,24 @@
+Vagrant.configure("2") do |config|
+    # Use a lightweight Ubuntu image
+    config.vm.box = "ubuntu/focal64"  # Ubuntu 20.04 LTS
+  
+    # Disable GUI for a lightweight setup
+    config.vm.provider "virtualbox" do |vb|
+      vb.gui = false  # Disable GUI
+      vb.memory = "512"  # Set memory to 512MB for lightweight setup
+      vb.cpus = 1  # 1 CPU for lightweight setup
+    end
+  
+    # Forwarding ports (if needed)
+    config.vm.network "private_network", type: "dhcp"
+    config.vm.network "forwarded_port", guest: 8000, host: 8000
+    config.ssh.insert_key = false
+    config.ssh.forward_agent = true
+  
+    # Provisioning (if you want to install packages or perform setup on boot)
+    config.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      sudo apt-get upgrade -y
+      sudo apt-get install -y build-essential curl git
+    SHELL
+end

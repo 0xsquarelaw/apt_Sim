@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Web Shell</title>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+    <style>
+        body { background-color: black; color: white; margin: 0; padding: 0; }
+        #terminal { width: 100%; height: 100vh; }
+        #status { position: fixed; bottom: 10px; right: 10px; padding: 5px; border-radius: 5px; }
+        .connected { background-color: green; }
+        .disconnected { background-color: red; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <div id="status">Connecting...</div>
+    <script>
+        const term = new Terminal({
+            cursorBlink: true,
+            scrollback: 1000
+        });
+        term.open(document.getElementById("terminal"));
+        const statusElement = document.getElementById("status");
+        
+        // Show initial message in terminal
+        term.write('Connecting to server...\r\n');
+
+        // Connect to WebSocket
+        let socket = null;
+        let isConnected = false;
+        
+        function connect() {
+            statusElement.textContent = "Connecting...";
+            statusElement.className = "";
+            
+            // Configure your backend URL here
+            const backendUrl = "localhost:8000";
+            const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${backendUrl}/ws`;
+            
+            console.log(`Attempting to connect to WebSocket at: ${wsUrl}`);
+            
+            try {
+                socket = new WebSocket(wsUrl);
+                
+                socket.onopen = () => {
+                    console.log("WebSocket connection established successfully");
+                    isConnected = true;
+                    statusElement.textContent = "Connected";
+                    statusElement.className = "connected";
+                    term.write('\r\nConnected to server terminal.\r\n');
+                };
+
+                socket.onmessage = (event) => {
+                    // For debugging, log a preview of the message
+                    const preview = event.data.length > 50 ? event.data.substring(0, 50) + '...' : event.data;
+                    console.log(`Received message (${event.data.length} bytes): ${preview}`);
+                    term.write(event.data);
+                };
+                
+                socket.onerror = (error) => {
+                    console.error("WebSocket error:", error);
+                    statusElement.textContent = "Connection Error";
+                    statusElement.className = "disconnected";
+                };
+                
+                socket.onclose = (event) => {
+                    console.log(`WebSocket closed with code: ${event.code}, reason: ${event.reason || 'No reason provided'}`);
+                    if (isConnected) {
+                        term.write('\r\n\r\nConnection closed. Attempting to reconnect...\r\n');
+                    } else {
+                        term.write('\r\n\r\nFailed to connect. Attempting to reconnect...\r\n');
+                    }
+                    isConnected = false;
+                    statusElement.textContent = "Disconnected";
+                    statusElement.className = "disconnected";
+                    
+                    // Attempt to reconnect after delay
+                    setTimeout(connect, 5000);
+                };
+            } catch (e) {
+                console.error("Error creating WebSocket:", e);
+                term.write(`\r\nError creating WebSocket: ${e.message}\r\n`);
+                statusElement.textContent = "Error";
+                statusElement.className = "disconnected";
+                setTimeout(connect, 5000);
+            }
+        }
+
+        // Set up the terminal for better command handling
+        let currentLine = '';
+        let isProcessingServerResponse = false;
+
+        // Handle user input with command buffering
+        term.onData((data) => {
+            if (!socket || socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            // Check for Enter key (carriage return)
+            if (data === '\r') {
+                // Send the current command line to the server with a newline
+                if (currentLine.trim() !== '') {
+                    console.log(`Sending command: ${currentLine}`);
+                    socket.send(currentLine + '\n');
+                    currentLine = '';
+                } else {
+                    // Even empty commands need a newline to execute
+                    socket.send('\n');
+                }
+                return;
+            }
+            
+            // Handle backspace
+            if (data === '\x7f' || data === '\b') {
+                if (currentLine.length > 0) {
+                    currentLine = currentLine.slice(0, -1);
+                    // Echo backspace to terminal (move cursor back, space, move back again)
+                    term.write('\b \b');
+                }
+                return;
+            }
+            
+            // For regular character input, add to buffer and echo locally
+            if (data >= ' ' || data === '\t') {  // Printable characters and tab
+                currentLine += data;
+                term.write(data);  // Echo the character locally
+            }
+        });
+        
+        // Initial connection
+        connect();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+- https://mariadb.com/kb/en/creating-a-vagrantfile/
+- pip install paramiko fastapi[standard]
