@@ -1,25 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <title>Dashboard</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Dashboard</h1>
-        <form id="userInputForm">
-            <label for="userInput">Enter your input:</label>
-            <input type="text" id="userInput" name="userInput" required>
-            <button type="submit">Submit</button>
-        </form>
-        <div id="outputSection">
-            <h2>Output:</h2>
-            <pre id="output"></pre>
-        </div>
-    </div>
-    <script src="js/main.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APT Simulation</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
