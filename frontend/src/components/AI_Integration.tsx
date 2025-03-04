@@ -28,15 +28,21 @@ const AiIntegration = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("/input", {
+      // Switch to JSON format
+      const response = await fetch("http://localhost:8000/input", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ input: input }),
       });
 
-      if (!response.ok) throw new Error("Failed to get response");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Failed to get response: ${response.status}`);
+      }
+
       const data = await response.json();
-      const aiMessage: Message = { role: "ai", text: data.response };
+      const aiMessage: Message = { role: "ai", text: data.response || data };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
