@@ -1,0 +1,31 @@
+{
+    "name": "FastAPI and Node.js Development Environment",
+    "image": "mcr.microsoft.com/vscode/devcontainers/python:3.13",
+    "features": {
+      "node": "22",
+      "python": "3.13"  
+    },
+    "postCreateCommand": [
+      "pip install -r backend/requirements.txt",
+      "npm install --prefix frontend"
+    //"apt-get update && apt-get install -y vagrant virtualbox" // This will likely fail in GitHub Codespaces. Virtualization software like VirtualBox cannot be installed within a container environment as it requires kernel-level access.
+    ],
+    "forwardPorts": [
+      8000,  // FastAPI port
+      5173   // Vite development server port
+    ],
+    "customizations": {
+      "vscode": {
+        "settings": {
+          "python.pythonPath": "/usr/local/bin/python",
+          "editor.formatOnSave": true
+        },
+        "extensions": [
+          "ms-python.python",  // Python extension
+          "dbaeumer.vscode-eslint",  // ESLint extension for JavaScript
+          "esbenp.prettier-vscode",  // Prettier extension for formatting code
+          "ms-typescript.vscode-typescript-next"  // TypeScript extension
+        ]
+      }
+    }
+}
